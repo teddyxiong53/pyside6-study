@@ -1,0 +1,125 @@
+# -*- mode: python ; coding: utf-8 -*-
+"""
+PyInstaller spec文件示例
+
+这是一个PyInstaller规范文件的示例，用于配置应用程序打包。
+使用spec文件可以更精细地控制打包过程，特别是对于复杂的应用程序。
+
+使用方法：
+1. 首先生成基本spec文件：pyinstaller --name="MyApp" 20_packaging.py
+2. 根据需要修改生成的MyApp.spec文件
+3. 使用修改后的spec文件打包：pyinstaller MyApp.spec
+"""
+
+import sys
+import os
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+
+# 定义应用程序名称
+block_cipher = None
+app_name = "MyApp"
+
+# 定义资源文件路径
+resources_path = "resources"
+
+# 根据操作系统设置分隔符
+if sys.platform.startswith('win'):
+    # Windows使用分号
+    separator = ";"
+else:
+    # macOS和Linux使用冒号
+    separator = ":"
+
+# 收集数据文件
+a = Analysis(
+    ['20_packaging.py'],  # 主脚本
+    pathex=[],
+    binaries=[],
+    datas=[(resources_path, resources_path)],  # 包含资源文件夹
+    hiddenimports=[],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
+
+# 创建可执行文件
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+# 单文件模式
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    [],
+    name=app_name,
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=False,  # False表示无控制台窗口
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon='resources/app_icon.svg',  # 应用图标
+)
+
+# 目录模式（取消注释以使用目录模式而非单文件模式）
+'''
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name=app_name,
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon='resources/app_icon.svg',
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name=app_name,
+)
+'''
+
+# macOS应用包（仅在macOS上有效）
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        exe,
+        name=f'{app_name}.app',
+        icon='resources/app_icon.svg',
+        bundle_identifier=None,
+        info_plist={
+            'CFBundleShortVersionString': '1.0.0',
+            'CFBundleVersion': '1.0.0',
+            'NSHighResolutionCapable': True,
+            'NSPrincipalClass': 'NSApplication',
+            'CFBundleDisplayName': app_name,
+            'CFBundleName': app_name,
+        },
+    )
